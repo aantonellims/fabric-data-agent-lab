@@ -277,6 +277,8 @@ I am new to this agent and the data. Tell me more about it and how to use it.
 questions. Treat these as suggestions, not a guarantee that every suggested
 question is in scope or will execute successfully.
 
+**What to conclude:** The agent describes what it *thinks* it can do from table and column names. That is a starting point, not a list of verified capabilities.
+
 Ask the following one at a time. Clear chat between these independent tests.
 
 ```text
@@ -297,7 +299,7 @@ month named in the answer. Expand the run step to see the June dates.
 | What the agent did | Took the latest date in the model (data ends 6 July 2026) as "today", so "last month" became June 2026. |
 | Is the number wrong? | No: 45,078 is the correct June total. |
 | Is the answer right? | No: it answers a different question and does not say so. A reader would assume it is last month's figure. The agent never mentions that there is no data for the month you meant. |
-| Lesson | Relative dates are ambiguous. A trustworthy answer states the exact period used and when the data stops. The AI-ready agent is configured to do this later in the lab. |
+| What to conclude | Both conventions ("before today" or "before the latest data") are legitimate, and the model does not say which one applies. The failure is not choosing June; it is not saying so. Relative dates are ambiguous. A trustworthy answer states the exact period used and when the data stops. The AI-ready agent is configured to do this later in the lab. |
 
 **If different:** ask the agent to state the exact dates. Repeat with an
 explicit month inside the recorded coverage. Do not describe "no records" as
@@ -314,6 +316,8 @@ operations-only agent created later will deliberately decline sales questions.
 **Reference result:** five products ranked by the governed sales measure over
 **all available history**. The all-history scope is visible in the paraphrase
 and DAX but is often missing from the final sentence.
+
+**What to conclude:** The ranking is right, but an answer without its period is incomplete: "top 5" over two years is not "top 5" this quarter. Always check that the period appears in the answer, not only in the query.
 
 **If different:** inspect the ranking, measure, and period. Product list prices
 are not total sales. If the query returns fewer than five products, distinguish
@@ -343,6 +347,8 @@ only; do not sum inventory across dates. State the snapshot date.
 **Reference result:** June sales with inventory from **one** snapshot (29 June
 2026), labelled as such.
 
+**What to conclude:** Stock is a snapshot: you can add sales across days, but not stock levels. The agent does not know which measures can be summed over time unless the model or the question tells it. A professional-looking table can still be meaningless.
+
 #### Multi-part question and conversational context
 
 Clear chat, then ask:
@@ -359,6 +365,8 @@ Frequency must not be confused with shortfall units.
 per product, the number of **product-plant-date snapshots** below reorder
 quantity, plus a total. The wording may loosely call these "dates" or
 "records"; they are snapshot occurrences.
+
+**What to conclude:** "How often" needs a defined unit. Because a governed measure exists (`Inventory Risk SKU Count`), the agent used a consistent definition; read the wording carefully, as the prose can describe it more loosely than the query does.
 
 Without clearing chat, ask:
 
@@ -389,6 +397,8 @@ with product, month and that count for every month with data.
 first alphabetically among four products tied at 38). The monthly counts add
 up to each product's total from the first answer. Prefer the table: chart
 rendering of multi-month series was unreliable in testing.
+
+**What to conclude:** A follow-up carries over *which* products you discussed, not necessarily *how* you measured them. In multi-turn analysis, restate the metric, the tie-break and the period, and check a chart against its underlying table.
 
 **If different:** confirm the three product names, date range, and frequency
 definition explicitly, then retry. If the previous answer did not establish a
@@ -425,6 +435,8 @@ Impeller, SenseLine Temperature Sensor, Turbine Bearing Set) with revenue and
 risk counts, and an explicit statement that the data does not explain the
 cause.
 
+**What to conclude:** Asking "why" invites plausible-sounding explanations that the data cannot support. Ask the agent for facts and to say when the data cannot explain a cause; keep evidence and hypotheses separate.
+
 **If different:** request the revenue period, selected products, and inventory
 criterion. "Why" does not authorize a causal explanation absent supporting data.
 Distinguish measured associations from hypotheses.
@@ -452,6 +464,8 @@ clarification. A correct measure with an unstated period is still ambiguous.
 **Reference result:** the governed `[Scrap Rate %]` over **all available
 history**, with that scope stated. This one is correct on the baseline.
 
+**What to conclude:** When a measure is clearly named (`Scrap Rate %`), even the baseline uses it correctly. What is still missing is an agreed default period, which the AI-ready model adds.
+
 **Next action:** retain the measure and make the default period explicit in
 the AI-ready model's instructions.
 
@@ -469,6 +483,8 @@ an OEE measure may already exist. Inspect rather than assume.
 **92.6%** in testing) that leaves out the Performance factor and does not state
 its date. It looks plausible but is not the business OEE.
 
+**What to conclude:** Without a governed definition, the agent invents a formula. The result looks credible, but it is not *your* OEE. Business KPIs must exist as model measures so the agent reuses them instead of improvising.
+
 **Next action:** compare any generated formula with the business definition.
 The AI-ready model contains `[OEE %]`. Reuse that governed measure instead of
 assuming that an improvised formula is authoritative.
@@ -485,6 +501,8 @@ or simply grouping all-shift yield by calendar day. The baseline's
 
 **Known behavior:** the baseline returns **all-shift yield by calendar day**,
 not the day-shift measure. That is the ambiguity this exercise demonstrates.
+
+**What to conclude:** The correct measure exists (`prd_yld_day`), but its name does not say what it means, so the agent cannot find it. Business meaning must be written down in names, descriptions and AI instructions, not only known by the people who built the model.
 
 **Next action:** the AI-ready model uses `[Day Yield Pct]` with a description.
 Put business meaning in model metadata and Prep data for AI, not solely in
@@ -506,6 +524,8 @@ filter.
 finds nothing, gets **BLANK** and reports it as **0 sales**. Two lessons: an
 undefined acronym is guessed, and "no rows" is not zero.
 
+**What to conclude:** Two risks in one answer: internal jargon is guessed, and an empty result is presented as a real "0". A confident zero on the wrong definition is worse than "I don't know what TP means".
+
 **Next action:** inspect the actual category filter and dates. A clarifying
 question is preferable to a confident answer for the wrong meaning. Later,
 the AI-ready operations-only agent must decline this **sales** request even
@@ -524,6 +544,8 @@ chart label.
 **Known behavior:** the baseline groups by **line asset**. The text and DAX list
 eight assets, but the chart may show only one category. Check the table in
 the run step rather than the chart.
+
+**What to conclude:** "Machine" means different things to different people (equipment, line, manufacturer). The agent picks one; the business must define which. Verify the grouping in the query and table, not the chart.
 
 **Next action:** for this workshop's AI-ready exercise, "machine" is a
 business alias for **equipment manufacturer**, mapped to
@@ -759,6 +781,8 @@ production date, with the resolved dates in the answer.
 **Reference result:** **2.36%**, 10 July to 8 August 2026, with scrap units and
 production quantity that reconcile.
 
+**What to conclude:** The documented default (latest 30 days of data) is applied and disclosed. Compare with the baseline: same measure, but now the period is explicit and agreed.
+
 **If different:** check the model's saved instructions, selected tables, and
 DAX filter. Retry with explicit start/end dates. Do not report success merely
 because the response repeats "30 days."
@@ -777,6 +801,8 @@ complete year.
 **Reference result:** **87.18%**, 1 January to 8 August 2026, with "data
 available through 8 August 2026" stated. Without the data-as-of guidance, the
 first attempt implied coverage through today.
+
+**What to conclude:** The governed `[OEE %]` replaces the improvised formula, and the answer is honest about the data stopping on 8 August. "This year" is answered as year-to-date *with* its real end date.
 
 **If different:** ask for OEE for an explicit year and end date within coverage.
 Historical sample data does not become current-year data just because the
@@ -797,6 +823,8 @@ for **28 June to 8 August 2026** (42 days). Earlier instruction versions
 produced 30 days, or a 336-row daily series that hit the 200-row limit; the
 period-precedence and grain rules fix both.
 
+**What to conclude:** Getting this right needed rules in both places: the model (which measure, which dates) and the agent (do not turn it into a daily series). Explicit durations must override defaults, and results must be computed at the grain the user asked for.
+
 **If different:** request 42 days ending on a stated production date. Confirm
 the measure and line grouping in DAX rather than trusting the answer's title.
 
@@ -811,6 +839,8 @@ make sales part of this agent's scope.
 
 **Reference result:** the configured out-of-scope message, without running a
 query.
+
+**What to conclude:** Scope instructions control what the agent *tries* to answer. They are not security: users with model access can still query sales elsewhere. Use permissions or row/object-level security for real restrictions.
 
 **If different:** check that you are in the AI-ready operations-only agent,
 not the baseline or multi-source agent. Check scope instructions and the
@@ -829,6 +859,8 @@ intended period is acceptable.
 **Reference result:** governed OEE for Pumps and Turbines over the latest 30
 days and the same window a year earlier: **86.83% vs 86.76% (+0.07 pp)**, with
 both date ranges stated.
+
+**What to conclude:** Three business terms (YoY, TP, reliability) in one short question are resolved correctly because each is documented. A comparison is only trustworthy when both periods are stated.
 
 **If different:** expand the run steps. A DAX execution error is not evidence
 that prior-year data is missing. First establish coverage for both periods.
@@ -859,6 +891,8 @@ and whether verified-answer metadata changes that grouping or its filters.
 2.60%, GE 2.41%, Mazak 2.38%, NI 2.36%, Marsilli 2.28%, Siemens 2.22%, with
 matching chart categories. If you see the same rate for every manufacturer,
 the query grouped by an `Assets` column, which does not filter production.
+
+**What to conclude:** Instructions must match how the model is actually built. A column that looks right can be disconnected (inactive relationship) and silently return the same value everywhere. Check that a breakdown really varies.
 
 **If different:** inspect conflicting metadata and ask explicitly:
 
@@ -923,6 +957,8 @@ rows covering 4,679 downtime minutes, and Rheinland's has 9 rows covering
 Ten runs per runtime take about 30 minutes; in a timed workshop, run one or
 two each and compare with this table.
 
+**What to conclude:** Judge a runtime on correctness first, then speed. Preview was clearly better on this hard question, but neither runtime is guaranteed: complex questions need verification whichever you choose.
+
 **If different:** if a runtime is unavailable, record that limitation. If a
 query fails, inspect its error and retry a simpler ranking before returning to
 the cumulative-threshold question.
@@ -979,6 +1015,8 @@ The narrowed list had **16** entity-name columns (for example `custName` to
 persisted, source mappings and relationships were preserved, and dependent
 measures updated automatically. Reopen the tables to confirm.
 
+**What to conclude:** Copilot speeds up modeling work but over-reaches by default (43 proposals for 16 real cases). A human scopes the change, approves it and checks it was saved.
+
 #### Optional: Add descriptions
 
 Ask:
@@ -1022,6 +1060,8 @@ flagged for review.
 
 Then check that no saved description contains "for review" text.
 
+**What to conclude:** AI-written descriptions are a draft. Apply what is confidently correct, and leave uncertain items for a domain expert rather than storing guesses as documentation.
+
 Finish by reviewing business-friendly names, descriptions, synonyms, sensible
 hierarchies, model relationships, security, the AI schema, verified answers,
 and AI instructions. Do not introduce new relationships or security changes
@@ -1060,6 +1100,8 @@ from zero. Inspect how percentages and color scales are represented.
 - Heatmap: the run steps show a `code_interpreter.execute` step and a
   products-by-months heatmap image.
 
+**What to conclude:** Code Interpreter adds analysis and charts the semantic model cannot produce, on the same governed numbers. Check partial periods: a month labelled "August" may contain only 8 days.
+
 **If different:** if no Python tool ran, do not present the result as a Code
 Interpreter demonstration. Confirm the tool is enabled and ask:
 `Use Code Interpreter to render the preceding table as a heatmap. Preserve
@@ -1083,6 +1125,8 @@ two **complete** months, June and July 2026, stated the data-as-of date,
 **interpolated** days without production, removed a linear trend and found a
 dominant cycle of about **15 days**. Point out the interpolation: it is an
 assumption, and the suggested operational causes are hypotheses.
+
+**What to conclude:** Python makes advanced statistics easy to request, but every method rests on assumptions (here, filling missing days). A detected 15-day cycle is a lead to investigate, not a root cause.
 
 **If different:** an empty or irregular series may not support the requested
 analysis. Request coverage and sampling checks before accepting any result.
@@ -1132,6 +1176,8 @@ development agreement **97.1%**; holdout agreement **94.4%**, Cohen's kappa
 **Cancelled**: the last cell stops the session on purpose. Check the MLflow
 run and registration instead.
 
+**What to conclude:** Before an AI grades another AI, check it against human judgement. A 94% agreement on unseen examples justifies using this judge for automated tests.
+
 **If different:** distinguish authentication, model availability, capacity,
 package, or storage errors from poor agreement with human labels. Stop before
 agent evaluation if no approved judge is available.
@@ -1174,6 +1220,8 @@ of the notebook is not equivalent to 100% answer accuracy.
 0 infrastructure errors, with the judge loaded from the registry. In an
 earlier run where the agent's tables were not selected, the score was 1/3:
 only the refusal passed.
+
+**What to conclude:** Automated evaluation turns "it seems to work" into a repeatable score. It also catches configuration mistakes: one unselected setting dropped the score from 3/3 to 1/3 while the agent still looked fine in chat.
 
 **If different:** when a refusal succeeds but data questions fail, first inspect
 source selection, data access, query errors, and the period used. A policy
@@ -1244,6 +1292,8 @@ Lakehouse data **up to the day you run it** (in the rehearsal, downtime
 reasons ran to the build day and sales to the first day of that month). The
 semantic models stop on 6 July / 8 August 2026. So "latest 30 days" means a
 different period in each source. Keep this in mind for Step 3.
+
+**What to conclude:** Different sources rarely have the same data freshness. Before combining them, know each one's dates.
 
 **If different:** SQL endpoint metadata can lag table creation. Inspect the
 notebook's first failed cell, wait for endpoint metadata refresh, and rerun
@@ -1357,6 +1407,8 @@ Apply exactly these dates to both sources and state them.
 reasons Equipment Failure 713, Changeover 322, Planned Maintenance 207,
 Material Shortage 190, Operator Error 156 (sum 1,588).
 
+**What to conclude:** "No error" is not "correct". With relative periods, the agent combined numbers from two different time windows and presented them as one. With explicit dates, the two sources reconcile exactly (reasons add up to 1,588). For cross-source questions, fix the period yourself.
+
 **If different:** check whether the agent was published, whether your identity
 has source access, and whether the endpoint has become available. A saved
 draft does not update the published endpoint. Do not change tenant permissions
@@ -1412,6 +1464,8 @@ Now add the turbomachinery few-shot example query to the OpsRefData source.
 
 After the third request, all three locations contained the change.
 
+**What to conclude:** The assistant's "done" message is not proof. Check every place a change should land.
+
 **If different:** ask for the missing change individually, or use the source's
 **Setup** editor to add it. Preserve existing routing, grain, and date rules.
 For a simple category-only example, add the following question and SQL pair.
@@ -1462,6 +1516,8 @@ Copilot (the assistant's category check showed Motors at 33,728,200 / 9,026,
 correctly excluded). Your totals can differ if your Lakehouse was built on
 another date; what must match is the agent's answer and your direct SQL
 query.
+
+**What to conclude:** The business term "turbomachinery" now consistently means Pumps + Turbines, and the agent's answer equals a direct database query: that is the test of a correct configuration.
 
 To return from **Build agent with AI** to the normal chat, select **Test
 data agent** in the toolbar (it may be under **More** (…) on a narrow window).
@@ -1526,6 +1582,8 @@ does not guarantee verbatim output.
 **Reference result:** the published Test view and the MCP endpoint both
 returned 419,704,600 / 7,118 with Motors excluded, `is_error = False`.
 
+**What to conclude:** Publishing creates the version others use. Testing the published version, not just the draft, confirms that what you validated is what users get.
+
 ### Step 6: Consume the agent in Microsoft 365 Copilot
 
 Complete this step when the workshop account has the required Microsoft 365
@@ -1554,6 +1612,8 @@ returns a source-grounded answer consistent with the equivalent direct query.
 characters** (`MfgOps_DA_AIReady_AB01_MultiSo`) and a generic description.
 Select **Open**. The answer took about 40 seconds: 419,704,600 revenue and
 7,118 units, Pumps and Turbines only.
+
+**What to conclude:** The same governed answer reaches users in Microsoft 365 Copilot. The wording can differ because Copilot adds its own layer; compare the numbers and filters, not the prose.
 
 **If different:** confirm agent identity, account, tenant, publication state,
 underlying source access, and time range. A missing Agent Store entry is not
