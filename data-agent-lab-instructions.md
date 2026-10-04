@@ -285,13 +285,19 @@ Show me the production quantity for the last month.
 
 **Expected behavior:** a production total with an identifiable period. Inspect
 whether DAX anchors "last month" to the current date or the latest loaded date.
-A historically anchored result can be internally consistent without answering
-the calendar-relative question you intended.
 
-**Reference result:** **45,078 units for June 2026**. The DAX takes
-`MAX('Date'[Date])` in the model, not today's date, as the reference, so "last
-month" becomes June. The final sentence may not name the month: expand the run
-step to see it.
+**Reference result:** **45,078 units**, for **June 2026**, often without the
+month named in the answer. Expand the run step to see the June dates.
+
+**How to read it:**
+
+| Check | Observation |
+| --- | --- |
+| What you meant | The previous calendar month before today (for example, September 2026 if you run the lab in October). |
+| What the agent did | Took the latest date in the model (data ends 6 July 2026) as "today", so "last month" became June 2026. |
+| Is the number wrong? | No: 45,078 is the correct June total. |
+| Is the answer right? | No: it answers a different question and does not say so. A reader would assume it is last month's figure. The agent never mentions that there is no data for the month you meant. |
+| Lesson | Relative dates are ambiguous. A trustworthy answer states the exact period used and when the data stops. The AI-ready agent is configured to do this later in the lab. |
 
 **If different:** ask the agent to state the exact dates. Repeat with an
 explicit month inside the recorded coverage. Do not describe "no records" as
