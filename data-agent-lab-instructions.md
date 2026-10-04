@@ -1599,10 +1599,11 @@ unfiltered dates for questions asking for a particular month or year.
 Test this change and verify that it works as expected.
 ```
 
-   It runs its own test query. In rehearsal 2 it tested the **latest 30
-   days** (Turbines 16,818,000 / 87 units, Pumps 1,336,600 / 180 units) plus a
-   check that Motors exist in the data, so its numbers do not match the
-   all-history totals below. That is expected: compare like with like.
+It runs its own test query. In rehearsal 2 it tested the **latest 30 days**
+(Turbines 16,818,000 / 87 units, Pumps 1,336,600 / 180 units) plus a check
+that Motors exist in the data, so its numbers do not match the all-history
+totals below. That is expected: compare like with like.
+
 8. Return to the normal chat (select **Test data agent** in the toolbar; it
    may be under **More** (…) on a narrow window). Clear chat and ask the same
    all-history question.
