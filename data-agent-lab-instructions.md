@@ -383,7 +383,7 @@ differently:
 Both are "frequencies", but they are different numbers. Check which unit the
 answer states.
 
-**What to conclude:** "How often" needs a defined unit. Even with a governed measure available (`Inventory Risk SKU Count`), the agent does not always use it, so the same question can return different numbers. Read the stated unit, not just the figures.
+**What to conclude:** "How often" needs a defined unit. Even with a governed measure available (`Inventory Risk SKU Count`), the agent does not always use it, so the same question can return different numbers. Read the stated unit, not just the figures. Here the right unit is the governed one: **product-plant-day snapshots** below reorder, because stock is recorded per product, per plant, per day (FlowGuard 10: 41 snapshots vs 38 distinct days, since on 3 days both plants were short). In production, the business fixes that choice once, for example as a line in the model's **Prep data for AI** instructions: *"How often" for inventory below reorder means [Inventory Risk SKU Count].*
 
 Without clearing chat, ask:
 
