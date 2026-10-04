@@ -102,6 +102,54 @@ Coordinate the model-editing exercises with the facilitator. Do not rename or
 overwrite somebody else's agent. For a resumed lab, reuse only your own items
 and inspect their configuration before continuing.
 
+### Know the business and the data
+
+The lab uses a fictional industrial manufacturer. It makes about 20 products
+(pumps, turbines, motors, valves, sensors and spare parts) on 8 production lines
+in several plants, then sells them to business customers. You do not need a
+manufacturing background: the terms below cover everything the questions use.
+
+**Main tables**
+
+| Table | One row is… | Used for |
+| --- | --- | --- |
+| `ProductionLog` | one production run: a line, a shift, a day | planned, produced, good and scrap units; runtime and downtime minutes |
+| `Inventory` | the stock of a product in a plant on a date (a daily snapshot) | stock on hand and reorder level |
+| `Products` | a product (SKU) | name, category, list price, cost |
+| `Lines` / `Plants` / `Assets` | a production line / a factory / a piece of equipment | where and on what equipment production runs; `Lines[Manufacturer]` is the equipment maker |
+| `Sales` / `Customers` | an order line / a buying company | revenue and units sold |
+| `PurchaseOrders` / `Vendors` | a purchase-order line / a supplier | purchasing spend and supplier delivery |
+| `Date` | a calendar day | all time filters |
+| `Business Measures` | no rows; it only holds the measures | the governed KPIs below |
+
+**Key metrics and terms**
+
+| Term in the questions | Meaning | Measure |
+| --- | --- | --- |
+| Production quantity | units produced = good units + scrap units | `[Production Qty]` |
+| Scrap rate (RQX) | share of produced units that were rejected | `[Scrap Rate %]` |
+| Yield | share of produced units that were good (the opposite of scrap rate) | `[Production Yield %]` |
+| Day production yield (DPY) | yield **excluding the Night shift**, not "yield per day" | `[Day Yield Pct]` |
+| OEE ("reliability" in this lab) | Overall Equipment Effectiveness = Availability × Performance × Quality | `[OEE %]` |
+| Availability / Performance / Quality | share of time running / produced vs planned / good vs produced | `[Availability %]`, `[Performance %]`, `[Quality %]` |
+| Downtime | minutes a line was stopped | `[Downtime Minutes]` |
+| Reorder level | stock level below which a product should be replenished | used by the inventory measures |
+| Inventory risk count | number of daily product-plant snapshots below the reorder level | `[Inventory Risk SKU Count]` |
+| Total sales / revenue | net sales amount in USD (not list price × quantity) | `[Total Sales]` |
+| TP | the Pumps and Turbines product categories (in Lab 3: "turbomachinery") | `[sls_amt_x]` for TP sales |
+| YoY | year over year: the same period one year earlier | — |
+
+Two models hold this data:
+
+- `ManufacturingOps` (**baseline**): deliberately unfriendly, with cryptic
+  names such as `custName`, `prd_yld_day` and `sls_amt_x`, and few
+  descriptions. It shows what an agent does without business context.
+- `ManufacturingOpsAIReady`: the same business with clear names, a
+  description on every measure, and the AI preparation you complete in Lab 1.
+
+In Lab 3 the `OpsRefData` Lakehouse adds two things the models do not have:
+the **reasons** for downtime and monthly product sales.
+
 ### How to read a result
 
 For each question, review the paraphrased request, generated DAX or SQL, query
