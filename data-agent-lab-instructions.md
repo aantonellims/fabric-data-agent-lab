@@ -47,17 +47,20 @@ Do not reinstall the Jumpstart or rerun setup just to begin this guide.
 | `BuildOpsRefData` | Builds the Lakehouse and its SQL-facing objects in Lab 3. |
 | `CreateMultiSourceDataAgent` | Configures and publishes your multi-source agent in Lab 3. |
 
-**Observation:** two semantic models, two reports, and six notebooks are
-available. The models contain cached data. Notebook presence alone does not
-prove that setup completed: open the two reports and confirm that their visuals
-load data rather than displaying connection errors.
-
-Both reports open on a blank **Page 1**. Use the page tabs at the bottom:
+**Observation:** notebook presence alone does not prove that setup completed:
+open the two reports and confirm that their visuals load data rather than
+displaying connection errors. Both reports open on a blank **Page 1**. Use the
+page tabs at the bottom:
 
 - `ManufacturingOps` report: open the **info** page. It shows the data-as-of
   card.
 - `ManufacturingOpsAIReady` report: open the **Verified Answer** page. It shows
   scrap rate by manufacturer.
+
+**Expected result:** two semantic models, two reports, and six notebooks in
+the folder; both reports display data.
+
+**What to conclude:** The workshop starts from populated, imported models: the data is a fixed snapshot, which matters for every "last month" or "this year" question later.
 
 **If different:** ask the facilitator to finish or repair setup. Do not create
 duplicate models, change capacity, or rerun setup over other participants'
@@ -210,6 +213,10 @@ row with both dates. Do not apply a default time window.
 4. Do not assume that a maximum date proves every earlier day is complete.
    Inspect monthly counts and consult the facilitator if completeness matters.
 
+**Observation:** the generated DAX should take `MIN` and `MAX` of
+`ProductionLog[Date]`, not of the `Date` table, and return one row in about
+30 seconds.
+
 **Expected result (workshop sample data):** the models are imported snapshots,
 so every deployment returns the same coverage:
 
@@ -228,6 +235,7 @@ Fact tables inside one model can also end on different days. In
 inventory snapshot is **3 August 2026**, so "the latest 30 days" of inventory
 can be anchored on either date (see the optional section after Step 4).
 
+**What to conclude:** Relative-date answers are only trustworthy once you know where the data stops. A refresh time or the last date of the calendar table does not tell you that; the latest fact date does.
 
 If you also ask for "the number of production records", the agent may return
 the count on each boundary date rather than the all-history total. That is
@@ -257,10 +265,13 @@ data. A model ending partway through a month should not be presented as a
 complete month.
 
 **Workshop time convention:** when no period is supplied, the AI-ready agent
-will use the latest 30 calendar days **including** the latest production date:
-from that date minus 29 days through that date. Explicit user dates take
+uses the latest 30 days of production data (the original instructions say "the
+30 days preceding the latest production date"; in practice the agent used the
+30 days **including** it: 10 July – 8 August 2026). Explicit user dates take
 precedence. Ambiguous relative phrases should be clarified or accompanied by
-the exact resolved dates. In production, the business owner must decide whether
+the exact resolved dates: the original instructions ask for this, but Step 4
+shows that the answers often omit them, and the optional section after Step 4
+shows how to enforce it. In production, the business owner must decide whether
 such phrases are anchored to today or to a data snapshot.
 
 **Facilitator cue:** "Before trusting the number, we check which dates it
@@ -584,9 +595,10 @@ months", which is false: data starts in June 2024.
 
 **What to conclude:** The correct measure exists, but its name does not say what it means and the agent cannot read DAX comments, so it never finds it. Business meaning must be written where the agent looks: names, descriptions, Prep data for AI and instructions. And check the dates in the query, not the comment beside them.
 
-**Next action:** the AI-ready model uses `[Day Yield Pct]` with a description
-and an AI instruction. If the period extends outside coverage, the answer
-should disclose that rather than silently shortening it.
+**Next action:** the AI-ready model has `[Day Yield Pct]` with a description,
+and its bundled AI instruction says to use it. Step 4 tests whether that is
+enough. If the period extends outside coverage, the answer should disclose
+that rather than silently shortening it.
 
 #### Q4: Internal acronyms
 
@@ -706,8 +718,10 @@ in their heads. There are four groups of controls:
 5. Inspect `[sls_amt_x]` as a metadata example: the description explains TP,
    although sales will remain outside this agent's scope.
 
-**Observation:** every table, column and measure has a business-friendly name
-or a description written for AI retrieval. Not every object is renamed:
+**Observation:** compare names and descriptions with the baseline model.
+
+**Expected result:** every table, column and measure has a business-friendly
+name or a description written for AI retrieval. Not every object is renamed:
 `[sls_amt_x]` keeps its cryptic name because downstream items depend on it,
 and the description carries the meaning instead.
 
@@ -786,6 +800,11 @@ optional section after Step 4 fixes them.
 Verified answers guide DAX generation using their prompts and visual metadata.
 A data agent does not necessarily return the original Power BI visual. Do not
 promise an identical chart or guaranteed latency improvement.
+
+**Expected result:** the AI data schema contains the eight operations tables;
+the verified answer groups by `Lines[Manufacturer]`; the bundled AI
+instructions contain the 30-day default, `[Day Yield Pct]`, and the two
+conflicting rules for RQX and "machines".
 
 **What to conclude:** Prep data for AI is where the business writes down what the baseline agent had to guess: which tables matter, which answers are approved, and what the terms mean. Those instructions are themselves business content: a wrong definition here is applied as confidently as a right one, so they need the same review as a measure.
 
@@ -966,7 +985,7 @@ Then:
 - Run 2: "+0.01 percentage points (0.0007 pp)", which is **wrong** (0.07 pp).
 - Neither run stated the two date ranges.
 
-**What to conclude:** Three business terms in one short question are resolved correctly because each is documented. But a correct pair of values can still come with a wrong difference or an unsupported explanation ("highlight potential bottlenecks" invites one). Check the periods and the arithmetic yourself.
+**What to conclude:** Three business terms in one short question (YOY, TP, reliability) are resolved correctly because each is documented, so the two OEE values are right. The difference, the periods and the explanation around them are not guaranteed: one run miscalculated the difference, and "highlight potential bottlenecks" invites an unsupported explanation. Check the periods and the arithmetic yourself.
 
 #### Question 6: Machine/manufacturer interpretation
 
@@ -1013,9 +1032,14 @@ What is our RQX?
 Which products have inventory below the reorder quantity? How often does that happen?
 ```
 
+**Observation:** RQX tests the conflict between the model's `RQX = [Quality %]`
+and the agent's "RQX: Scrap rate"; "how often" tests a term that neither layer
+defines.
+
 **Expected result with the original setup:**
 
-- RQX: **97.64% "scrap rate"** in one run (that is the quality rate, from
+- RQX:
+ **97.64% "scrap rate"** in one run (that is the quality rate, from
   the bundled `RQX = [Quality %]`), 2.36% in the other. The model and the
   agent define RQX differently, and the answer depends on which one wins.
 - How often: in both runs the agent said that **no data was returned** and
@@ -1164,7 +1188,8 @@ instructions control that rephrasing; model instructions control the DAX.
 **4. Ask Questions 1–6 and the two diagnostic questions again.**
 
 **Expected result with both improved blocks** (rehearsal 3, Standard
-runtime; identical in reruns):
+runtime; the first six rows were identical in reruns, the "how often" row
+varied with the anchor date):
 
 | Question | Result |
 | --- | --- |
@@ -1182,9 +1207,12 @@ asset grouping; each failure added a rule.
 
 **What to conclude:** Each rule in these blocks comes from an observed failure, and each was checked against a direct DAX query. That is the practical method: test, write the business definition where it is consumed, retest. Instructions still guide rather than guarantee: the "how often" window varied with the anchor date (inventory ends on 3 August, production on 8 August), so read the stated period.
 
-**If you keep the improved blocks:** the reference results for the runtime,
-Code Interpreter and Lab 2 below were measured with them. With the original
-blocks, expect answers that state fewer dates.
+**Which instructions for the rest of the workshop?** Either is fine; decide
+now and note it. The reference results for the runtime, Code Interpreter and
+Lab 3 were measured with the improved blocks; Lab 2 gives results for both.
+If you stay on the original blocks, expect answers that state fewer dates and
+the Step 4 weaknesses (day yield, machine grouping, RQX, "how often") to
+reappear wherever those questions do.
 
 ### Data agent runtime
 
@@ -1342,16 +1370,19 @@ manufacturing operations questions. Add descriptions based on the following
 guidelines.
 
 DO: Add a description to every visible table, column, and measure. Keep
-descriptions concise and front-load the key meaning within the first 200
-characters. Front-load preferred usage, disambiguation, and units. Make
+descriptions concise because only the first 200 characters are read by the
+data agent. Front-load preferred usage, disambiguation, and units. Make
 implicit knowledge explicit. Do not restate the field name or add DAX logic.
 Sample values if necessary to learn the domain and context. Include expected
-grain where useful. For calculation groups, describe the items and their use.
+grain where useful. For calculation groups, use the calculation group column
+description to enumerate items and explain their use, for example: "Use with
+measures and date table for: Current, MTD, QTD, YTD, PY, YOY, YOY%." The same
+200-character limit applies.
 
-DON'T: Generate descriptions purely from AI without business context.
-AI-only descriptions tend to restate what the model structure already shows.
-Always validate descriptions with the user or a domain expert. Do not
-contradict descriptions across related fields.
+DON'T: Generate descriptions purely from AI without business context. AI-only
+descriptions tend to restate what the model structure already shows. Always
+validate descriptions with the user or a domain expert. Do not contradict
+descriptions across related fields.
 ```
 
 If Copilot returns proposals for review, review them before saying:
@@ -1364,8 +1395,10 @@ Update the descriptions.
 approval or applies directly, then open a few objects, including the five
 demo measures in the **Ambiguous Names Demo** folder (`sls_amt_x`, `gm2_pct`,
 `po_ok_flagish`, `prd_yld_day`, `inv_rsk_u`), and compare each description
-with the DAX. The 200-character target is a concise-writing convention, not a
-hard limit of every product surface.
+with the DAX. The prompt states a 200-character reading limit; treat it as a
+concise-writing target rather than a documented limit of every product
+surface. (The rehearsals used the same prompt with that sentence softened and
+without the calculation-group example; this model has no calculation groups.)
 
 **Expected result:** two behaviors were observed:
 
@@ -1581,6 +1614,8 @@ DATA_AGENT_NAME = "MfgOps_DA_AIReady_AB01"
 8. Review the overall score and the **Per-question review** under the results
    section. If accuracy is below 100%, read each failed row's **answer, expected
    answer and judge reason** before changing anything. Open the MLflow run.
+   Compare your score with the row below that matches your agent's
+   instructions (original, or the optional improved blocks).
 
 **Observation:** inspectable per-question answers, DAX/run steps, ground truth
 or policy expectations, judge reasoning, and metrics. Completion of the
@@ -1593,7 +1628,8 @@ configuration, and on the judge:
 
 | Agent configuration | Score | What happened |
 | --- | --- | --- |
-| Original instructions (main path, rehearsal 3) | **2/3** | Line C2 – Sensor Calibration, 2.60%: pass. Day production yield this year **97.55%** instead of **97.67%**: **genuine failure**, correctly caught ("provided 97.55% instead of the expected 97.67%"). Refusal: pass. |
+| Original instructions (main path, 5 October rerun) | **2/3** |
+ Line C2 – Sensor Calibration, 2.60%: pass. Day production yield this year **97.55%** instead of **97.67%**: **genuine failure**, correctly caught ("provided 97.55% instead of the expected 97.67%"). Refusal: pass. |
 | Improved instructions (optional section), rehearsals 1–2 | **3/3** | all answers correct and accepted |
 | Improved instructions, rehearsal 3 | **2/3**, then **1/3** on a rerun | every answer was correct (Line C2 2.60%; 97.67%), but the judge failed them for adding "scrap units, production quantity, and date details" or "unsupported extra details" (the period and data-as-of date the instructions require) |
 | Earlier test, tables not selected | 1/3 | only the refusal passed |
@@ -1686,8 +1722,8 @@ minutes (identical in all three rehearsals).
 
 **Important — dates differ from the models:** `BuildOpsRefData` generates
 Lakehouse data **up to the day before you run it**, not up to the models'
-dates. In the rehearsals, run on 3 and 4 October 2026, downtime reasons ran
-from 1 June 2024 to 3 October 2026 and sales months to 1 October 2026. The
+dates. In rehearsal 3, run on 4 October 2026, downtime reasons ran from 1
+June 2024 to 3 October 2026 and sales months to 1 October 2026. The
 semantic models stop on 6 July / 8 August 2026. So "latest 30 days" can mean a
 different period in each source. Keep this in mind for Step 3.
 
@@ -1706,7 +1742,11 @@ transaction feed. A latest month key does not prove that the month is complete.
 ### Step 2: Create the multi-source agent with the SDK
 
 1. Open `CreateMultiSourceDataAgent` in the **same workspace** as your
-   AI-ready agent and `OpsRefData`.
+   AI-ready agent and `OpsRefData`. The notebook copies the model source from
+   your AI-ready agent and **writes its own agent instructions**, so it does
+   not matter which instruction set your AI-ready agent uses. The model's
+   Prep data for AI instructions, however, still apply (in the rehearsal, the
+   improved model block was in place).
 2. Inspect **Step 1 - Parameters** and update:
 
 ```python
@@ -1733,8 +1773,8 @@ new routing, adds a data source description, instructions and example
 queries, publishes the agent and tests it through MCP. Your base agent remains
 available and unchanged.
 
-**Expected result:** about 4–5 minutes (in rehearsal 3 the job also waited 3
-minutes in the capacity queue). The multi-source agent has the eight model
+**Expected result:** the notebook ran for about 4 minutes (in rehearsal 3 it
+first waited about 3 minutes in the capacity queue). The multi-source agent has the eight model
 tables, the three Lakehouse objects, about 2,800 characters of agent
 instructions, about 4,400 characters of Lakehouse instructions and **five**
 example queries. It came back on the **Standard** runtime and **without Code
@@ -1814,8 +1854,11 @@ minutes, and what were its leading downtime reasons in that same period?
 Apply exactly these dates to both sources and state them.
 ```
 
-**Expected result:** Line A1 - Pump Assembly, **1,588** downtime minutes;
 
+**Observation:** check that the answer states 10 July – 8 August 2026 for
+both sources and that the reasons add up to the line's total.
+
+**Expected result:** Line A1 - Pump Assembly, **1,588** downtime minutes;
 reasons Equipment Failure 713, Changeover 322, Planned Maintenance 207,
 Material Shortage 190, Operator Error 156 (sum 1,588).
 
@@ -2090,8 +2133,10 @@ organization's policy before enabling it.
 
 - **Lab 1:** built a data agent on a semantic model; read the paraphrase, DAX
   and answer behind each response; saw where it guesses (periods, KPIs,
-  jargon, grain, business terms); fixed that with an AI data schema, verified
-  answers, model and agent instructions; used Copilot to rename and describe
+  jargon, grain, business terms); configured an AI data schema, verified
+  answers, model and agent instructions, saw which guesses they fixed and which
+  they did not, and (optionally) turned each failure into a tested rule; used
+  Copilot to rename and describe
   model objects; compared the Standard and Preview runtimes; used Code
   Interpreter for pivots, charts and statistics.
 - **Lab 2:** calibrated an LLM judge against human labels, ran an automated
@@ -2107,7 +2152,7 @@ organization's policy before enabling it.
 | Area | Evidence to retain in your own approved environment |
 | --- | --- |
 | Baseline agent | Selected source tables, data-as-of dates, and inspected responses. |
-| AI-ready agent | Eight selected tables, consistent model/agent guidance, governed KPI queries, and correct sales refusal. |
+| AI-ready agent | Eight selected tables, the original instructions' results and weaknesses recorded (or the optional improved blocks applied and retested), and correct sales refusal. |
 | Relative questions | Declared reference dates and exact resolved periods; no silent substitution of missing months. |
 | Runtime | Recorded correctness and timing; unsuccessful runs remain visible. |
 | Modeling | Approved names/descriptions persisted, with dependent content checked. |
@@ -2129,7 +2174,7 @@ passed.
 | Setup notebook fails with HTTP 403 at the DataFolder parameter step | Fix that cell's `Authorization` header to `"Bearer " + power_bi_token`, then rerun (see Before you start). |
 | Agent loses table selections | Click one checkbox at a time, wait for each to save, then reopen the Explorer to confirm. |
 | Every manufacturer shows the same scrap rate | The query grouped by an `Assets` column (inactive relationship). Use `Lines[Manufacturer]`. |
-| Six-week question uses 30 days, or returns a daily series | Check the period-precedence and grain rules in both model and agent instructions. |
+| Six-week question uses 30 days, or returns a daily or weekly series | Expected with the original instructions (Step 4, Question 3). The optional improved blocks add period-precedence and grain rules. |
 | Combined downtime question mixes periods | Expected with relative periods: the Lakehouse runs to today, the models do not. Ask with explicit dates. |
 | Stuck in **Build agent with AI** mode | Select **Test data agent** in the toolbar (or under **More** (…)). |
 | "You can only open 20 items at a time" when opening an item | Close some open items in the left navigation bar (each opened item stays there), then retry. |
@@ -2145,8 +2190,10 @@ passed.
 | "Last month" returns an unexpected month | Inspect the DAX reference date and the fact table's coverage; ask with explicit dates. |
 | Baseline and AI-ready totals differ | Align measure, filters, date range, and underlying data coverage before comparing quality. |
 | AI-ready agent cannot answer data questions | Confirm that tables are selected, the source is accessible, and the query executed. |
-| RQX gives quality rather than scrap | Remove the conflicting model instruction; confirm the query uses `[Scrap Rate %]`. |
-| Day yield includes Night shift | Inspect `[Day Yield Pct]` selection and model-level guidance. |
+| RQX gives quality rather than scrap | Caused by the bundled `RQX = [Quality %]` model instruction. Replace it as in the optional section after Step 4; confirm the query uses `[Scrap Rate %]`. |
+| Day yield includes Night shift | Inspect `[Day Yield Pct]` selection and model-level guidance; the optional improved blocks define DPY in both layers. |
+| "How often" answer says no data, or counts distinct days | Expected with the original instructions. The optional improved blocks define the unit (`Inventory Risk SKU Count`) in both layers. |
+
 | YoY answer says "no data" after a failed query | Treat it as a query failure; establish coverage with a successful independent query. |
 | Notebook cannot find an agent | Replace the sample name with the exact agent display name in that workspace. |
 | Notebook evaluation succeeds but score is low | Read each failed case and its ground truth; notebook execution is not answer correctness. |
