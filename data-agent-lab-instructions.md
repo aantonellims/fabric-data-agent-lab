@@ -173,8 +173,9 @@ again**.
 
 Each exercise below shows the results observed when this guide was rehearsed
 end to end, three times, on fresh deployments (3 October and twice on 4
-October 2026). Where runs differed, the differences are shown: that
-variability is part of what you are learning to check.
+October 2026). Step 4 was rerun on 5 October with the original lab's
+instructions, exactly as written here. Where runs differed, the differences
+are shown: that variability is part of what you are learning to check.
 
 - **Observation** tells you what to inspect and what the agent did in the
   rehearsals, including behavior that is deliberately imperfect on the
@@ -225,7 +226,8 @@ combines the models with the Lakehouse.
 Fact tables inside one model can also end on different days. In
 `ManufacturingOpsAIReady`, production runs to **8 August 2026** but the last
 inventory snapshot is **3 August 2026**, so "the latest 30 days" of inventory
-can be anchored on either date (see Step 4).
+can be anchored on either date (see the optional section after Step 4).
+
 
 If you also ask for "the number of production records", the agent may return
 the count on each boundary date rather than the all-history total. That is
@@ -334,7 +336,7 @@ rehearsals. The month was named in some runs ("the last full calendar month
 | Is the number wrong? | No: 45,078 is the correct June total. |
 | Is the answer right? | No: it answers a different question. Even when it names June, it never says that the model has no data for the month you meant. |
 
-**What to conclude:** Both conventions ("before today" or "before the latest data") are legitimate, and the model does not say which one applies. The failure is not choosing June; it is not saying so. Relative dates are ambiguous. A trustworthy answer states the exact period used and when the data stops. The AI-ready agent is configured to do this later in the lab.
+**What to conclude:** Both conventions ("before today" or "before the latest data") are legitimate, and the model does not say which one applies. The failure is not choosing June; it is not saying so. Relative dates are ambiguous. A trustworthy answer states the exact period used and when the data stops. The optional section after Step 4 shows how to make the agent do this.
 
 **If different:** ask the agent to state the exact dates. Repeat with an
 explicit month inside the recorded coverage. Do not describe "no records" as
@@ -414,7 +416,7 @@ differently:
   (FlowGuard 10 Control Valve 38 dates, FlowGuard 25 and TorqueMax 30 37
   each), once with a percentage of 220 dates.
 
-**What to conclude:** "How often" needs a defined unit. Even with a governed measure available, the agent does not always use it, so the same question can return different numbers. Read the stated unit, not just the figures. Here the right unit is the governed one, **product-plant-day snapshots**, because stock is recorded per product, per plant, per day (FlowGuard 10: 41 snapshots vs 38 distinct days, since on 3 days both plants were short). You will fix that definition in Step 3 and check it in Step 4.
+**What to conclude:** "How often" needs a defined unit. Even with a governed measure available, the agent does not always use it, so the same question can return different numbers. Read the stated unit, not just the figures. Here the right unit is the governed one, **product-plant-day snapshots**, because stock is recorded per product, per plant, per day (FlowGuard 10: 41 snapshots vs 38 distinct days, since on 3 days both plants were short). The optional section after Step 4 writes that definition down and checks it.
 
 Without clearing chat, ask:
 
@@ -633,14 +635,13 @@ at zero, which exaggerates small differences.
 
 **What to conclude:** "Machine" means different things to different people. The agent picks one; the business must define which. A column name can mean one thing in the schema and another to the business ("Customer" may really be a user, "Product ID" a SKU). Verify the grouping in the query and table, not the chart.
 
-**Next action:** for this workshop's AI-ready exercise, "machine" is a
-business alias for **equipment manufacturer**, mapped to
-`Lines[Manufacturer]`. This is a workshop-specific convention, not a universal
-meaning of machine. Use `Lines[Manufacturer]` because production rows reach
-it through an **active** relationship; the `Assets` relationships to
-`ProductionLog` and `Lines` are **inactive**, so grouping a production KPI by
-an `Assets` column does not filter it. The bundled verified answer also uses
-`Lines[Manufacturer]`.
+**Next action:** at this company, "machine" means the **equipment
+manufacturer**. The AI-ready model's verified answer groups by
+`Lines[Manufacturer]`, which reaches production through an **active**
+relationship. Its bundled AI instruction, however, points to
+`Assets[Manufacturer]`; the `Assets` relationships to `ProductionLog` and
+`Lines` are **inactive**, so that column would not filter a production KPI.
+Step 4 shows what the agent does with this contradiction.
 
 **Facilitator cue:** "We are not teaching the agent a universal definition of
 machine. We are documenting the meaning our business expects."
@@ -714,34 +715,319 @@ and the description carries the meaning instead.
 
 #### Check Prep data for AI
 
-1. In the semantic model, select **Prep data for AI**. It optimizes the model
-   for Copilot and data agents through three settings.
-2. Open **Simplify the data schema** / **AI data schema**: a focused subset of
-   the model that Copilot and data agents prioritize. The deployment has
-   **already** focused it: the operations tables `Assets`, `Business Measures`,
-   `Date`, `Inventory`, `Lines`, `Plants`, `ProductionLog`, and `Products` are
-   included, while `Customers`, `PurchaseOrders`, `Sales`, `SalesSummary`,
-   `Vendors` and the sales/purchasing measures are excluded. Confirm this
-   rather than changing it. The agent's Explorer still lists all 13 tables:
-   in Step 4 you select the same eight tables in the agent itself.
-3. Review **Verified answers**: human-approved visual answers with trigger
-   phrases and optional filters, which improve accuracy and consistency. Look
-   for the scrap-rate-by-machine example and inspect its grouping, measure,
-   and filters.
-4. Confirm that the verified answer groups by `Lines[Manufacturer]`. This
-   matches the rule below. Do not switch it to `Assets[Manufacturer]`: the
-   Assets relationships are inactive, so that column does not filter
-   production measures.
-5. Open **Add AI instructions**: business logic and terminology written on the
-   model, which influence the DAX the agent generates. The bundled text
-   conflicts with this workshop in two places: `RQX = [Quality %] measure`
-   (RQX is scrap rate) and `For all questions related to "machines" use
-   Assets[Manufacturer] column` (that column does not filter production
-   measures). **Select all the existing text and replace it** with the block
-   below. The block keeps the bundled rules that remain valid, including the
-   `CONTAINSSTRING` rule for names, and adds the definition of "how often"
-   from Step 1. It is the instruction set used in the third rehearsal (lightly
-   reformatted for reading).
+Prep data for AI helps optimize a semantic model for Copilot and data agents,
+improving the accuracy, context, and relevance of AI-driven insights.
+
+1. Switch to **Editing** mode in the model view.
+2. Select **Prep data for AI**.
+3. Configure the **AI data schema**. An AI data schema defines a focused subset
+   of the model for Copilot and data agents to prioritize. Limit this agent to
+   manufacturing operations topics. In this workshop the deployment has
+   **already** done it: `Assets`, `Business Measures`, `Date`, `Inventory`,
+   `Lines`, `Plants`, `ProductionLog`, and `Products` are included, while
+   `Customers`, `PurchaseOrders`, `Sales`, `SalesSummary`, `Vendors` and the
+   sales/purchasing measures are excluded. Confirm it rather than changing it.
+4. Configure **Verified answers**. These are human-approved visual responses
+   with predefined trigger phrases and optional filters. Define prompts for
+   machine-related questions and select the Manufacturer column. Verified
+   answers improve accuracy and consistency and reduce latency. The deployment
+   already contains a scrap-rate-by-machine verified answer: open it and note
+   which column it groups by (`Lines[Manufacturer]`).
+5. Configure **AI instructions**. These provide context, business logic, and
+   guidance directly on the semantic model. Based on our previous tests, add
+   instructions that incorporate organizational terminology and analytical
+   priorities. AI instructions in Prep data for AI influence DAX generation.
+   The deployment already contains the following text. **Read it, keep it as
+   it is** for the main lab, and note anything that contradicts the business
+   definitions in [Know the business and the data](#know-the-business-and-the-data):
+
+```text
+If no time window is specified, assume last 30 days based on [Latest Date] measure which is the most recent Product Log date.
+
+If a user asks about for <KPI> for last N days, follow below pattern:
+DEFINE
+VAR _LatestDate = [Latest Date]
+
+EVALUATE
+  ROW(
+    "KPI - Last N Days",
+    CALCULATE(
+      <KPI>,
+      DATESINPERIOD('Date'[Date], _LatestDate, -N, DAY)
+    )
+  )
+
+For Day Production Yield question use [Day Yield Pct] measure. 
+
+RQX = [Quality %] measure
+
+For all questions related to "machines" use Assets[Manufacturer] column
+Products[Price] column should not be used for calculating sales or revenue. ONLY use measures, if present.
+For named-entity columns (e.g., names, places, organizations), use CONTAINSSTRING for partial-text matching by default. Use exact-match filters only when the user explicitly requests a specific entity.
+```
+
+> **Tip:** Two instruction layers exist. Semantic model AI instructions in
+> **Prep data for AI** shape the DAX the agent generates, while data agent
+> instructions shape orchestration, tone, and response formatting. Use
+> model-level instructions for "always calculate this way" rules and
+> agent-level instructions for "always respond this way" rules.
+
+6. Select **Close**.
+
+**Observation:** the AI schema and verified answer match the operations scope,
+but two bundled instructions contradict the business definitions:
+`RQX = [Quality %]` (RQX is the **scrap** rate, the opposite of quality), and
+"machines" mapped to `Assets[Manufacturer]` while the verified answer uses
+`Lines[Manufacturer]`. `Assets` reaches production only through **inactive**
+relationships, so grouping a production measure by an `Assets` column does not
+filter it. Keep both as they are: Step 4 shows what they produce, and the
+optional section after Step 4 fixes them.
+
+Verified answers guide DAX generation using their prompts and visual metadata.
+A data agent does not necessarily return the original Power BI visual. Do not
+promise an identical chart or guaranteed latency improvement.
+
+**What to conclude:** Prep data for AI is where the business writes down what the baseline agent had to guess: which tables matter, which answers are approved, and what the terms mean. Those instructions are themselves business content: a wrong definition here is applied as confidently as a right one, so they need the same review as a measure.
+
+**Facilitator cue:** "We place each rule where it is consumed: business
+calculations in the model, routing and response behavior in the agent."
+
+### Step 4: Testing the optimized semantic model
+
+#### Create and configure the AI-ready agent
+
+1. Create a new data agent named `MfgOps_DA_AIReady_AB01`.
+2. Add the `ManufacturingOpsAIReady` semantic model from the same workspace
+   (use the **Refreshed** time to tell same-name models apart).
+3. The Explorer lists **all 13 tables** of the model. Select the limited schema
+   configured in Prep data for AI: only `Assets`, `Business Measures`, `Date`,
+   `Inventory`, `Lines`, `Plants`, `ProductionLog`, and `Products`. Click
+   **one checkbox at a time** and wait a second for each to save: rapid clicks
+   can be lost when you leave the page.
+4. Switch to another Explorer tab and back, expand the source, and confirm the
+   eight checkboxes are still selected. An attached source with no selected
+   tables cannot answer data questions (in an earlier test, this alone
+   dropped the Lab 2 score from 3/3 to 1/3).
+5. Open **Agent instructions** and add the following. These Markdown-formatted
+   orchestrator instructions control tone, formatting, and data-source
+   routing.
+
+```markdown
+# Scope
+
+Answer questions about manufacturing operations using Assets, Business Measures,
+Date, Inventory, Lines, Plants, ProductionLog, and Products. Focus on production
+performance, asset utilization, inventory, plant/line comparisons, trends, and
+operational KPIs. Do not answer customer, sales, purchasing, or vendor
+questions.
+
+# Audience
+
+Plant managers, operations leaders, production supervisors, inventory planners,
+manufacturing analysts, and executives seeking operational insights.
+
+# Tone
+
+Clear, concise, professional, and action-oriented. Use plain business language,
+explain technical manufacturing terms when needed, and avoid unsupported
+conclusions.
+
+# Guidelines
+
+- DO NOT answer any questions or explain anything related to sales, customers,
+  vendors, purchase orders (PO). Decline with the response "This question is out
+  of scope for this agent. Please ask a manufacturing operations-related
+  question."
+- Unless the user specifies otherwise, always default to the 30 days preceding
+  the latest production date for all questions and KPIs. If a different period
+  is used, state it clearly in the response.
+- Confirm the plant, line, product, and date range when a request is ambiguous.
+- State units, periods, filters, and assumptions clearly.
+- Provide direct answers first, followed by key drivers or comparisons.
+- Highlight operational exceptions, trends, and potential bottlenecks.
+- Redirect out-of-scope questions involving Customers, PurchaseOrders, Sales,
+  SalesSummary, or Vendors.
+- Location: use plant location unless the user specifies otherwise.
+
+# Common Abbreviations
+
+- RQX: Scrap rate
+- OEE: Overall Equipment Effectiveness, also reliability
+- DPMP: Defects per million parts
+- YoY/YOY: Year over year
+- MTD: Month to date
+- MOM: Month over month
+- TP: Turbine + Pumps
+- DPY: Day Production Yield
+```
+
+6. Close the agent instruction tab to save the instructions; reopen it and
+   confirm the text persisted.
+7. Run the production data-as-of check for this model. Record its dates
+   (reference: 1 June 2024 to **8 August 2026**).
+8. Ask the same questions as in the last section and inspect the responses.
+   Clear chat before each one.
+
+The results below were measured with exactly this configuration (bundled
+model instructions, original agent instructions, Standard runtime), twice, on
+5 October 2026. The optional section that follows shows what changes when you
+fix what these tests reveal.
+
+#### Question 1: Default period
+
+```text
+What is our scrap rate?
+```
+
+**Observation:** the original lab expects the default 30-day period. Check
+the measure, the period, and whether the answer states the dates.
+
+**Expected result:** **2.36%**, "for the last 30 days", in both runs. The
+value is the governed `[Scrap Rate %]` for 10 July – 8 August 2026, but **the
+answer does not state those dates**, although the agent instructions say
+"state units, periods, filters".
+
+**What to conclude:** The default period now matches what the business agreed, and the answer is correct. But "the last 30 days" still does not tell the reader which 30 days, or that the data stops on 8 August: compare with the baseline, where the same measure covered all history.
+
+#### Question 2: Explicit period overrides the default
+
+```text
+What is the OEE this year?
+```
+
+**Observation:** the original lab expects the predefined OEE measure and the
+default period to be overridden.
+
+**Expected result:** **87.18%** year to date, using the governed `[OEE %]`, in
+both runs. One run stated the period (1 January – 8 August 2026), the other
+did not.
+
+**What to conclude:** The governed `[OEE %]` replaces the improvised formulas of the baseline (87.33% or 92.6%), and "this year" overrides the 30-day default. Whether the answer says that the year stops on 8 August is left to chance.
+
+**If different:** ask for OEE for an explicit year and end date within coverage.
+Historical sample data does not become current-year data just because the
+question says "this year."
+
+#### Question 3: Day production yield
+
+```text
+What is our day production yield for the last six weeks? Break it down by lines.
+```
+
+**Observation:** the original lab expects the `[Day Yield Pct]` measure
+(Night shift excluded). Check the measure, the six-week boundaries, and the
+grain (one value per line).
+
+**Expected result (not as expected):** neither run used `[Day Yield Pct]`
+correctly:
+
+- Run 1: the right period (28 June – 8 August 2026) and one value per line,
+  but computed as "the **average daily** Production Yield %", all shifts
+  (for example Line A1 97.59%, Line C1 97.70%; the governed day yield is
+  97.56% and 97.61%).
+- Run 2: "six calendar weeks … a **30-day window** that fully covers those six
+  weeks" (10 July – 8 August, which is not six weeks), broken down **by week**
+  for each line.
+
+**What to conclude:** A one-line model instruction ("use [Day Yield Pct]") and an abbreviation ("DPY: Day Production Yield") are not enough. The agent still has to decide what "day", "six weeks" and "by line" mean, and it decided differently each time. The optional section shows the extra rules that make this stable.
+
+#### Question 4: Out-of-scope request
+
+```text
+What were the TP sales last week?
+```
+
+**Observation:** the original lab expects the question to be declined as out
+of scope.
+
+**Expected result:** the configured message "This question is out of scope for
+this agent. Please ask a manufacturing operations-related question." in both
+runs, without a query.
+
+**What to conclude:** Scope instructions control what the agent *tries* to answer. They are not security: users with model access can still query sales elsewhere. Use permissions or row/object-level security for real restrictions.
+
+#### Question 5: Multiple abbreviations and year-over-year logic
+
+```text
+What's the YOY TP reliability?
+```
+
+**Observation:** the original lab expects YOY, TP and reliability to be
+resolved according to the instructions. Check both periods and the
+arithmetic.
+
+**Expected result:** governed OEE for Pumps and Turbines, latest 30 days
+against the same 30 days a year earlier: **86.83% vs 86.76%** in both runs.
+Then:
+
+- Run 1: "+0.07 percentage points" (correct), followed by an interpretation
+  the data does not support ("further gains will likely come from targeted
+  actions on specific bottleneck assets").
+- Run 2: "+0.01 percentage points (0.0007 pp)", which is **wrong** (0.07 pp).
+- Neither run stated the two date ranges.
+
+**What to conclude:** Three business terms in one short question are resolved correctly because each is documented. But a correct pair of values can still come with a wrong difference or an unsupported explanation ("highlight potential bottlenecks" invites one). Check the periods and the arithmetic yourself.
+
+#### Question 6: Machine/manufacturer interpretation
+
+```text
+Show me the distribution of scrap rate by machine.
+```
+
+**Observation:** the original lab expects `Assets[Manufacturer]`, as the
+bundled model instruction says. Check which column the query really groups by.
+
+**Expected result (not as expected):** the agent did **not** use
+`Assets[Manufacturer]`, and it did not use the verified answer's
+`Lines[Manufacturer]` either:
+
+- Run 1: eight **assets** (`Lines[asset]`): Calibration Rig C2 2.60%, Gas
+  Turbine C1 2.53%, … Feed Pump B1 2.20% (10 July – 8 August, no dates
+  stated).
+- Run 2: eight **line + asset + manufacturer** rows with good and scrap
+  percentages.
+
+The values themselves are correct for those groupings.
+
+**What to conclude:** The model instruction, the verified answer and the business meaning of "machine" disagree, so the agent chose its own grouping each time. Had it followed the instruction, `Assets[Manufacturer]` would not even have filtered production (inactive relationship). Instructions must match how the model is built, and a business term needs one definition everywhere.
+
+**Facilitator cue:** "The improvement is clearer, inspectable behavior. We
+still verify the actual query; instructions are guidance, not a guarantee."
+
+#### Optional: Go further — fix what the tests revealed
+
+This section is not in the original lab. It shows how to turn the failures
+above into rules, and what changed when we applied them in the rehearsals.
+Do it if you have time, or demonstrate it as a facilitator. In a shared
+workspace, coordinate the model change: it affects every agent that uses the
+model.
+
+**1. Two more diagnostic questions with the original setup.** Clear chat
+before each:
+
+```text
+What is our RQX?
+```
+
+```text
+Which products have inventory below the reorder quantity? How often does that happen?
+```
+
+**Expected result with the original setup:**
+
+- RQX: **97.64% "scrap rate"** in one run (that is the quality rate, from
+  the bundled `RQX = [Quality %]`), 2.36% in the other. The model and the
+  agent define RQX differently, and the answer depends on which one wins.
+- How often: in both runs the agent said that **no data was returned** and
+  suggested that the reorder fields might not exist. In fact 13 products had
+  23 product-plant-date snapshots below reorder in 10 July – 8 August 2026.
+
+**2. Replace the model's AI instructions.** In **Prep data for AI > Add AI
+instructions**, select all the bundled text and replace it with the block
+below. It keeps the bundled rules that remain valid (default period,
+`[Day Yield Pct]`, no revenue from `Products[Price]`, `CONTAINSSTRING`),
+corrects RQX and "machine", and adds rules for periods, grain, data-as-of
+dates, missing data and the "how often" unit.
 
 ```text
 Use governed measures rather than inventing alternative KPI formulas.
@@ -802,46 +1088,11 @@ CONTAINSSTRING for partial-text matching by default. Use exact-match filters
 only when the user explicitly requests a specific entity.
 ```
 
-6. Search the saved instructions for `Quality %` and `Assets[Manufacturer]`.
-   Neither should appear as a rule (only "not [Quality %]" remains).
-7. Save/apply the model changes and close the Prep data for AI pane.
-
-**Observation:** the AI schema, verified answer and instructions now express
-one consistent business interpretation (rehearsal 3: the saved instructions
-contained neither `RQX = [Quality %]` nor the `Assets[Manufacturer]` rule).
-
-**Important:** two instruction layers exist. Model AI instructions in **Prep
-data for AI** shape the DAX the agent generates ("always calculate this way").
-Agent instructions shape orchestration, scope, routing and response format
-("always respond this way"). Neither substitutes for the other, as Step 4
-shows.
-
-Verified answers guide DAX generation using their prompts and visual metadata.
-A data agent does not necessarily return the original Power BI visual. Do not
-promise an identical chart or guaranteed latency improvement.
-
-**What to conclude:** Prep data for AI is where the business writes down what the baseline agent had to guess: which tables matter, which answers are approved, and what the terms mean.
-
-**Facilitator cue:** "We place each rule where it is consumed: business
-calculations in the model, routing and response behavior in the agent."
-
-### Step 4: Testing the optimized semantic model
-
-#### Create and configure the AI-ready agent
-
-1. Create a new data agent named `MfgOps_DA_AIReady_AB01`.
-2. Add the `ManufacturingOpsAIReady` semantic model from the same workspace
-   (use the **Refreshed** time to tell same-name models apart).
-3. The Explorer lists **all 13 tables** of the model. Explicitly select only
-   these eight: `Assets`, `Business Measures`, `Date`, `Inventory`, `Lines`,
-   `Plants`, `ProductionLog`, and `Products`. Click **one checkbox at a time**
-   and wait a second for each to save: rapid clicks can be lost when you leave
-   the page.
-4. Switch to another Explorer tab and back, expand the source, and confirm the
-   eight checkboxes are still selected. An attached source with no selected
-   tables cannot answer data questions (in an earlier test, this alone
-   dropped the Lab 2 score from 3/3 to 1/3).
-5. Open the agent's **Instructions** area and enter the following.
+**3. Replace the agent instructions** with the block below. It keeps the
+original scope, audience, refusal message and abbreviations, and adds rules
+for stating dates, grain, period precedence, "machine", DPY and "how often".
+It drops "highlight potential bottlenecks", which invited unsupported
+explanations.
 
 ```markdown
 # Scope
@@ -902,203 +1153,38 @@ replace six weeks with 30 days.
 Never convert a blank or unavailable KPI into zero, including for a chart.
 ```
 
-6. Close/save the instructions pane, reopen it, and confirm the text persisted.
-7. Run the production data-as-of check for this model. Record its dates
-   (reference: 1 June 2024 to **8 August 2026**).
-8. Clear chat before each independent question below.
+**Why two layers?** Model instructions alone do not fix every question: the
+agent's orchestrator first rephrases your question (for example into a daily
+series, an asset grouping, or "distinct dates currently below reorder") and
+only then generates DAX under the model rules. In rehearsal 3, the "how
+often" definition in the model alone was ignored in both runs; with the same
+definition in the agent instructions, it was used in 3 of 3 runs. Agent
+instructions control that rephrasing; model instructions control the DAX.
 
-**Why two layers of instructions?** Model instructions alone do not fix every
-question: the agent's orchestrator first rephrases your question (for example
-into a daily series, an asset grouping, or "distinct dates currently below
-reorder") and only then generates DAX under the model rules. In the first
-rehearsal this broke the day-yield, machine and "this year" questions; in the
-third, the "how often" question (Question 7). Agent instructions control that
-rephrasing; model instructions control the DAX.
+**4. Ask Questions 1–6 and the two diagnostic questions again.**
 
-#### Question 1: Default period
+**Expected result with both improved blocks** (rehearsal 3, Standard
+runtime; identical in reruns):
 
-```text
-What is our scrap rate?
-```
+| Question | Result |
+| --- | --- |
+| Scrap rate | 2.36%, **10 July – 8 August 2026**, data available through 8 August |
+| OEE this year | 87.18%, **1 January – 8 August 2026**, with a note that data stops on 8 August |
+| Day production yield, six weeks by line | governed `[Day Yield Pct]`, **28 June – 8 August 2026 (42 days)**, one value per line: A1 97.56%, A2 97.61%, B1 97.63%, B2 97.66%, C1 97.61%, C2 97.43%, D1 97.56%, D2 97.56% |
+| TP sales | refused, as before |
+| YoY TP reliability | 86.83% vs 86.76%, **+0.07 pp**, both date ranges stated |
+| Scrap rate by machine | six **manufacturers** (`Lines[Manufacturer]`), 10 July – 8 August: Fluke 2.60%, GE 2.41%, Mazak 2.38%, NI 2.36%, Marsilli 2.28%, Siemens 2.22% |
+| How often | `Inventory Risk SKU Count`, unit stated (product-plant-date snapshots): 13 products, 23 snapshots for 10 July – 8 August (FlowGuard 10 Control Valve highest, 3); once anchored on the last inventory date instead, 5 July – 3 August: 15 products, 33 snapshots |
 
-**Observation:** check that the agent uses `[Scrap Rate %]` with the default
-period (30 days including the latest production date) and states the dates.
+In rehearsal 1, earlier versions of these blocks still produced 30 days
+instead of 42, a 336-row daily series that hit the 200-row limit, and an
+asset grouping; each failure added a rule.
 
-**Expected result:** **2.36%** for **10 July to 8 August 2026**, with data
-available through 8 August, in about 25 seconds (identical in all three
-rehearsals; some runs also list scrap units and production quantity).
+**What to conclude:** Each rule in these blocks comes from an observed failure, and each was checked against a direct DAX query. That is the practical method: test, write the business definition where it is consumed, retest. Instructions still guide rather than guarantee: the "how often" window varied with the anchor date (inventory ends on 3 August, production on 8 August), so read the stated period.
 
-**What to conclude:** The documented default (latest 30 days of data) is applied and disclosed. Compare with the baseline: same measure, but now the period is explicit and agreed.
-
-**If different:** check the model's saved instructions, selected tables, and
-DAX filter. Retry with explicit start/end dates. Do not report success merely
-because the response repeats "30 days."
-
-#### Question 2: Explicit period overrides the default
-
-```text
-What is the OEE this year?
-```
-
-**Observation:** check that the agent uses the governed `[OEE %]`, not an ad
-hoc formula; that "this year" overrides the 30-day default; and that the answer
-says it is year-to-date and where the data stops.
-
-**Expected result:** **87.18%**, 1 January to 8 August 2026, with "data
-available through 8 August 2026" and a note that it does not cover later
-dates (identical in all three rehearsals). Without the data-as-of guidance,
-the first attempt in rehearsal 1 implied coverage through today.
-
-**What to conclude:** The governed `[OEE %]` replaces the improvised formula, and the answer is honest about the data stopping on 8 August. "This year" is answered as year-to-date *with* its real end date.
-
-**If different:** ask for OEE for an explicit year and end date within coverage.
-Historical sample data does not become current-year data just because the
-question says "this year."
-
-#### Question 3: Day production yield
-
-```text
-What is our day production yield for the last six weeks? Break it down by lines.
-```
-
-**Observation:** check `[Day Yield Pct]` (Night shift excluded), one value per
-line, and the six-week boundaries ("six weeks" could mean 42 rolling days or
-six calendar weeks).
-
-**Expected result:** **eight lines, one value each** for **28 June to 8 August
-2026** (42 days): Line A1 97.56%, A2 97.61%, B1 97.63%, B2 97.66%, C1 97.61%,
-C2 97.43%, D1 97.56%, D2 97.56% (third rehearsal; earlier runs within
-97.4–97.7%). One run grouped the lines under their plant and noted that blank
-line-plant combinations are not zero. Earlier instruction versions produced
-30 days, or a 336-row daily series that hit the 200-row limit; the
-period-precedence and grain rules fix both.
-
-**What to conclude:** Getting this right needed rules in both places: the model (which measure, which dates) and the agent (do not turn it into a daily series). Explicit durations must override defaults, and results must be computed at the grain the user asked for.
-
-**If different:** request 42 days ending on a stated production date. Confirm
-the measure and line grouping in DAX rather than trusting the answer's title.
-
-#### Question 4: Out-of-scope request
-
-```text
-What were the TP sales last week?
-```
-
-**Observation:** a refusal, not a sales total. Recognizing TP does not make
-sales part of this agent's scope.
-
-**Expected result:** the configured message "This question is out of scope for
-this agent. Please ask a manufacturing operations-related question.", without
-running a query (response time about 2 seconds).
-
-**What to conclude:** Scope instructions control what the agent *tries* to answer. They are not security: users with model access can still query sales elsewhere. Use permissions or row/object-level security for real restrictions.
-
-**If different:** check that you are in the AI-ready operations-only agent,
-not the baseline or multi-source agent. Check scope instructions and the
-focused schema. Never use scope prompts as a substitute for data security.
-
-#### Question 5: Multiple abbreviations and year-over-year logic
-
-```text
-What's the YOY TP reliability?
-```
-
-**Observation:** three terms must resolve: TP (Pumps and Turbines),
-reliability (governed OEE) and YoY (two comparable periods). Asking which
-periods you mean is acceptable.
-
-**Expected result:** governed OEE for Pumps and Turbines only, with both
-periods and the data-as-of date stated. The **format varied** between
-rehearsals:
-
-- a single comparison of the latest 30 days with the same window a year
-  earlier: **86.83% (10 Jul – 8 Aug 2026) vs 86.76% (10 Jul – 8 Aug 2025),
-  +0.07 pp** (rehearsals 2 and 3, three runs; one called the window "30
-  production days" although it is 30 calendar days); or
-- a **monthly table for the last 12 complete months** (August 2025 – July
-  2026), each month against the same month a year earlier (for example
-  July 2026: 85.53% vs 87.16%, −1.63 pp).
-
-Both are valid readings of "YoY". In one run, one row's difference was
-miscalculated (86.07% vs 85.94% shown as "+0.00 pts" instead of +0.13). Check
-the arithmetic on a row or two.
-
-**What to conclude:** Three business terms (YoY, TP, reliability) in one short question are resolved correctly because each is documented. "YoY" itself is still ambiguous (which periods?), so a comparison is only trustworthy when both periods are stated, and the numbers still deserve a quick check.
-
-**If different:** expand the run steps. A DAX execution error is not evidence
-that prior-year data is missing. First establish coverage for both periods.
-Then use this diagnostic follow-up:
-
-```text
-First establish the available production dates for Pumps and Turbines.
-Ask me to choose comparable current and prior-year periods within coverage.
-Then return [OEE %] for each period separately and the difference in
-percentage points. Do not interpret a failed query as missing data.
-```
-
-If necessary, ask the two period questions separately. Compare results only
-after both queries succeed; do not calculate a YoY percentage from a missing
-or zero denominator.
-
-#### Question 6: Machine/manufacturer interpretation
-
-```text
-Show me the distribution of scrap rate by machine.
-```
-
-**Observation:** check that the query groups by `Lines[Manufacturer]`
-(the saved rule and the verified answer), not by asset or line.
-
-**Expected result:** six manufacturers for 10 July to 8 August 2026: Fluke
-2.60%, GE 2.41%, Mazak 2.38%, NI 2.36%, Marsilli 2.28%, Siemens 2.22%, with a
-six-bar chart (identical in all three rehearsals). If you see the same rate
-for every manufacturer, the query grouped by an `Assets` column, which does
-not filter production.
-
-**What to conclude:** Instructions must match how the model is actually built. The original lab pointed this question at `Assets[Manufacturer]`; that column sits behind an inactive relationship and silently returns the same value everywhere. Check that a breakdown really varies.
-
-**If different:** inspect conflicting metadata and ask explicitly:
-
-```text
-Show [Scrap Rate %] grouped by Lines[Manufacturer] for the latest 30 days of
-production data. State the dates. I mean equipment manufacturers, not
-individual assets or production lines.
-```
-
-Different equivalent-looking columns are not automatically interchangeable:
-check relationships, grain, and totals before accepting the result.
-
-#### Question 7: Frequency with a defined unit
-
-Clear chat and ask the Step 1 question again, now on the AI-ready agent:
-
-```text
-Which products have inventory below the reorder quantity? How often does that happen?
-```
-
-**Observation:** check that the answer uses `Inventory Risk SKU Count`, states
-the unit (product-plant-date snapshots), lists every product with at least one
-such snapshot, and states the period.
-
-**Expected result:** the governed measure, with the unit stated, for a
-30-day window. In rehearsal 3:
-
-- **With the model instruction only** (before the agent line was added), the
-  instruction was ignored twice: the orchestrator rephrased the question as
-  "products *currently* below reorder" and "distinct dates", returned only
-  AquaFlow 100 Centrifugal Pump (170 on hand vs 225 reorder) and counted 3
-  distinct days in 30 days, then 24 days in 12 months.
-- **With the agent terminology line**, three runs out of three used the
-  governed measure and stated the unit. Two used 10 July – 8 August 2026: **13
-  products, 23 snapshots** (FlowGuard 10 Control Valve highest with 3). One
-  anchored the window on the last *inventory* date instead: 5 July – 3 August
-  2026, **15 products, 33 snapshots** (FlowGuard 10: 5), split by plant. Both
-  match a direct DAX check for their window.
-
-**What to conclude:** A business definition written once in the model was not enough on its own: the agent had already rephrased the question before the model rule applied. With the definition in both layers, the unit is now stable. What still varies is the anchor date, because inventory snapshots end on 3 August and production on 8 August: read the stated period, and specify the dates when that matters.
-
-**Facilitator cue:** "The improvement is clearer, inspectable behavior. We
-still verify the actual query; instructions are guidance, not a guarantee."
+**If you keep the improved blocks:** the reference results for the runtime,
+Code Interpreter and Lab 2 below were measured with them. With the original
+blocks, expect answers that state fewer dates.
 
 ### Data agent runtime
 
@@ -1501,23 +1587,24 @@ or policy expectations, judge reasoning, and metrics. Completion of the
 notebook is not equivalent to 100% answer accuracy, and a failed case is not
 automatically a wrong answer.
 
-**Expected result:** about 3–5 minutes per run, 0 infrastructure errors, the
-judge loaded from the registry, and a score that **varied** while the agent's
-answers stayed correct:
+**Expected result:** about 3–5 minutes per run, 0 infrastructure errors and
+the judge loaded from the registry. The score depends on the agent
+configuration, and on the judge:
 
-| Run | Score | What happened |
+| Agent configuration | Score | What happened |
 | --- | --- | --- |
-| Rehearsals 1 and 2 | **3/3** | all answers correct and accepted |
-| Rehearsal 3, run 1 | **2/3** | "Which line has the highest scrap rate?" answered **Line C2 – Sensor Calibration, 2.60%** (= ground truth) but failed: "adds specific scrap units, production quantity, and date details that are not present in the expected answer" |
-| Rehearsal 3, rerun | **1/3** | the same line answer, and the year-to-date day production yield **97.67%** (= ground truth), both failed for adding "unsupported extra details" (the period and data-as-of date) |
+| Original instructions (main path, rehearsal 3) | **2/3** | Line C2 – Sensor Calibration, 2.60%: pass. Day production yield this year **97.55%** instead of **97.67%**: **genuine failure**, correctly caught ("provided 97.55% instead of the expected 97.67%"). Refusal: pass. |
+| Improved instructions (optional section), rehearsals 1–2 | **3/3** | all answers correct and accepted |
+| Improved instructions, rehearsal 3 | **2/3**, then **1/3** on a rerun | every answer was correct (Line C2 2.60%; 97.67%), but the judge failed them for adding "scrap units, production quantity, and date details" or "unsupported extra details" (the period and data-as-of date the instructions require) |
 | Earlier test, tables not selected | 1/3 | only the refusal passed |
 
 The refusal case ("Which product had the highest sales this year?") passed
 every time. The rubric fails answers that "fabricate facts" and tells the
-judge to use only the expected answer, so the period and data-as-of date that
-the agent instructions require can be read as unsupported facts.
+judge to use only the expected answer, so extra but correct context can be
+read as unsupported facts.
 
-**What to conclude:** Automated evaluation turns "it seems to work" into a repeatable score, and it catches configuration mistakes (one unselected setting dropped the score to 1/3 while the agent still looked fine in chat). But a calibrated judge is still a model: here it failed correct answers for being more transparent than the expected answer. Read the judge's reason before fixing the agent, and add such cases to the calibration set rather than removing useful detail from the answers.
+**What to conclude:** Automated evaluation turns "it seems to work" into a repeatable score: with the original instructions it caught a real day-yield error that looked plausible in chat, and it catches configuration mistakes (one unselected setting dropped the score to 1/3). But a calibrated judge is still a model: it also failed correct answers for being more transparent than the expected answer. Read the answer, the expected answer and the judge's reason before fixing anything, and add disputed cases to the calibration set rather than removing useful detail from the answers.
+
 
 **If different:** when a refusal succeeds but data questions fail, first
 compare the failed answer with the expected answer. If the value matches, it
