@@ -647,23 +647,37 @@ machine. We are documenting the meaning our business expects."
 
 ### Step 3: Configuring and optimizing the semantic model and data agent
 
-A trusted data agent comes from analysing its answers and configuring it
-deliberately. Start by fixing its scope, then use the optimization controls.
+Creating a trusted data agent requires analyzing its responses and configuring
+it correctly. In this step, we will use the available optimization controls to
+create a robust data agent based on a defined scope and context.
 
-#### Define scope
+A data agent can include multiple data sources. First identify its scope: a
+specific topic, such as inventory management; a domain, such as manufacturing
+operations; or an area, such as a single plant or product line. Configure and
+optimize the agent based on that scope.
 
-A data agent can use several sources, so first decide its scope: a topic (for
-example inventory management), a domain (manufacturing operations) or an area
-(a single plant or product line). The next agent answers manufacturing
-operations questions: production, inventory, assets, plants, lines, scrap,
-yield, and OEE. It does not answer sales, customer, vendor, or purchasing
-questions. Lab 3 will explicitly add product sales through a different source.
+#### Scope
 
-Leave unnecessary tables, columns and measures out of the agent's scope, but
-do not remove sales tables from the underlying shared model to enforce this
-exercise. Focus the AI schema and agent table selection, and add scope
-instructions. These controls are not a replacement for permissions or
-row-/object-level security.
+In our previous example, we selected all the tables and measures in the
+semantic model. In this exercise, we will limit the scope to questions related
+to manufacturing operations. Leave any unnecessary tables, columns, measures,
+and objects out of the data agent's scope.
+
+Concretely, the AI-ready agent you create in Step 4
+(`MfgOps_DA_AIReady_AB01`) will:
+
+- **answer** questions about production, inventory, assets, plants, lines,
+  scrap, yield and OEE;
+- **decline** questions about sales, customers, vendors and purchasing.
+
+Sales comes back in Lab 3, through a separate Lakehouse source and a separate
+multi-source agent.
+
+To limit the scope, do not delete the sales tables from the shared semantic
+model. Instead, use three controls: the AI data schema (below), the tables you
+select in the agent (Step 4), and the scope rules in the agent instructions
+(Step 4). These steer what the agent answers; they are not security, so use
+permissions or row-/object-level security for real restrictions.
 
 #### Prepare the semantic model for AI
 
